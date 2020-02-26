@@ -1,0 +1,108 @@
+<html ng-app="calculator">
+<head>
+  <meta charset="utf-8" name="viewport" content="width=device-width, initial-scale=1">
+  <script src="//cdnjs.cloudflare.com/ajax/libs/angular.js/1.2.1/angular.min.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+
+  <title>Кредитный калькулятор</title>
+
+  <script>
+    var calculator = angular.module('calculator', []);
+    calculator.controller('NameCtrl', function ($scope, $http, $location) {
+      $scope.calculate = function () {
+        $scope.errorMessages = null;
+        $scope.showTable = false;
+        $http
+        .get($location.absUrl().concat("calculator"),
+            {
+              params: {
+                amountOfCredit: $scope.amountOfCredit,
+                loanTermInMonths: $scope.loanTermInMonths,
+                percent: $scope.percent
+              }
+            }
+        )
+        .then(
+            function (response) {
+              $scope.showTable = true;
+              $scope.loanPayments = response.data;
+            }
+        )
+        .catch((reason) => {
+          $scope.errorMessages = reason.data;
+        });
+      };
+    });
+  </script>
+</head>
+
+<body ng-controller="NameCtrl">
+
+<form style="font-size: large">
+  <div class="container">
+
+    <div>
+      <label>Сумма кредита (от 100 000 до 5 000 000)</label>
+      <div class="input-group">
+        <input type="number" class="form-control" placeholder="Например: 100 000" ng-model="amountOfCredit">
+        <span class="input-group-addon">руб.</span>
+      </div>
+    </div>
+    <div>
+      <label>Срок кредита (от 12 до 60)</label>
+      <div class="input-group">
+        <input type="number" class="form-control" placeholder="Например: 12" ng-model="loanTermInMonths">
+        <span class="input-group-addon">мес.</span>
+      </div>
+    </div>
+    <div>
+      <label>Годовая роцентная ставка (от 12.9 до 23.9)</label>
+      <div class="input-group">
+        <select class="form-control" ng-model="percent">
+          <option value="12.9" selected>12.9</option>
+          <option value="23.9">23.9</option>
+        </select>
+        <span class="input-group-addon">%</span>
+      </div>
+    </div>
+    <div>
+      <hr>
+      <button type="button" class="btn btn-secondary btn-block" ng-click="calculate()">Расчитать</button>
+    </div>
+  </div>
+
+  <div class="container" ng-if="errorMessages">
+    <hr>
+    <div ng-repeat="errorMessage in errorMessages">
+      <div class="alert alert-danger" role="alert">
+        <strong>{{ errorMessage }}</strong>
+      </div>
+    </div>
+  </div>
+
+  <div class="container" ng-show="showTable">
+    <hr>
+    <table class="table" style="font-size: large">
+      <tr>
+        <th>Номер</th>
+        <th>Дата</th>
+        <th>Платеж по долгу</th>
+        <th>Платеж по процентам</th>
+        <th>Остаток</th>
+        <th>Плтеж</th>
+      </tr>
+      <tr ng-repeat="loanPayment in loanPayments">
+        <td>{{loanPayment.number}}</td>
+        <td>{{loanPayment.date}}</td>
+        <td>{{loanPayment.principalDebtPayment}}</td>
+        <td>{{loanPayment.percentPayment}}</td>
+        <td>{{loanPayment.balanceOfCredit}}</td>
+        <td>{{loanPayment.totalPaymentAmount}}</td>
+      </tr>
+    </table>
+  </div>
+</form>
+</body>
+</html>
